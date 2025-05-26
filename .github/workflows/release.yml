@@ -15,6 +15,10 @@ jobs:
   code-scanning:
     name: SonarQube Code Scanning
     uses: ./.github/workflows/code-scanning.yml
+    secrets:
+      SONAR_TOKEN:      ${{ secrets.SONAR_TOKEN }}
+      SONAR_HOST_URL:   ${{ secrets.SONAR_HOST_URL }}
+      PAT_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   test:
     name: Test and lint
