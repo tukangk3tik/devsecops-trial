@@ -1,18 +1,14 @@
 # .github/workflows/security.yml
 name: Dependency Alerts
 on:
-  push:
-    branches:
-      - main 
-  pull_request:
-    types: [opened, synchronize, reopened]
+  workflow_call: 
 
 jobs:
   dep-review:
     name: Dependency Review
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: github/dependency-review-action@v4
+      - uses: actions/checkout@v3
+      - uses: github/dependency-review-action@v3
         with:
           fail-on-severity: high
