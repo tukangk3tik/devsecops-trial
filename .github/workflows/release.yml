@@ -1,0 +1,214 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+      - alpha
+      - beta
+      
+jobs:
+  security:
+    name: Dependency Alerts
+    uses: ./.github/workflows/security.yml
+
+  code-scanning:
+    name: SonarQube Code Scanning
+    uses: ./.github/workflows/code-scanning.yml
+
+  test:
+    name: Test and lint
+    uses: ./.github/workflows/development.yml
+    needs:
+      - security
+      - code-scanning
+
+  docker:
+    name: Build container
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: "☁️ checkout repository"
+        uses: actions/checkout@v4
+
+      - name: "🔧 setup buildx"
+        uses: docker/setup-buildx-action@v1
+
+      - name: "🔧 cache docker layers"
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: "🔧 docker meta"
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: ${{ github.repository }}
+          tags: latest
+
+      - name: "📦 docker build"
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          outputs: type=docker,dest=/tmp/docker.tar
+          push: false
+          cache-from: type=gha, scope=${{ github.workflow }}
+          cache-to: type=gha, scope=${{ github.workflow }}
+
+      - name: "📂 docker artifacts"
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker
+          path: /tmp/docker.tar
+
+  build:
+    name: Build application
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: "☁️ checkout repository"
+        uses: actions/checkout@v4
+
+      - name: "🔧 setup node"
+        uses: actions/setup-node@v4
+        with:
+          node-version: 16
+
+      - name: "🔧 install npm@latest"
+        run: npm i -g npm@latest
+
+      - name: "📦 install dependencies"
+        uses: bahmutov/npm-install@v1
+
+      - name: "📊 repository visualizer"
+        id: diagram
+        uses: githubocto/repo-visualizer@0.7.1
+        with:
+          excluded_paths: "node_modules,build,.storybook,.netlify,.github,npm-shrinkwrap.json"
+          output_file: "public/diagram.svg"
+          should_push: false
+          root_path: "src/"
+
+      - name: "📊 visualiser artifacts"
+        uses: actions/upload-artifact@v4
+        with:
+          name: diagram
+          path: public/diagram.svg
+
+      - name: "🚀 static app"
+        run: npm run build
+
+      - name: "📂 production artifacts"
+        uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: build
+
+  release:
+    environment:
+      name: production
+      url: https://github.com/${{ github.repository }}/releases/tag/${{ steps.semantic-release.outputs.release-tag }}
+    name: Semantic release
+    needs:
+      - test
+      - docker
+      - build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: "☁️ checkout repository"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: "♻️ clean up artifact paths"
+        run: |
+          rm -rf public/diagram.svg
+          rm -rf supabase/diagrams/
+
+      - name: "📂 download docker artifacts"
+        uses: actions/download-artifact@v4
+        with:
+          name: docker
+          path: /tmp
+
+      - name: "📦 load tag"
+        run: |
+          docker load --input /tmp/docker.tar
+          docker image ls -a
+
+      - name: "📂 download build artifacts"
+        uses: actions/download-artifact@v4
+        with:
+          name: build
+          path: build
+
+      - name: "📂 download diagram artifacts"
+        uses: actions/download-artifact@v4
+        with:
+          name: diagram
+          path: public/
+
+      - name: "🚀 release"
+        id: semantic-release
+        uses: open-sauced/release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy:
+    name: Deploy container to VM
+    needs: release
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    env:
+      PROJECT_NAME: ${{ vars.PROJECT_NAME }}
+      IMAGE_NAME:   ${{ github.repository }}:latest
+
+    steps:
+      # 1) Download the docker.tar artifact
+      - name: Download docker artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docker
+          path: /tmp
+
+      # 2) Install Ansible
+      - name: Install Ansible
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible-core
+
+      # 3) Prepare SSH key & inventory
+      - name: Prepare inventory & SSH key
+        run: |
+          echo "${{ secrets.VM_SSH_KEY }}" > /tmp/id_rsa
+          chmod 600 /tmp/id_rsa
+          printf "[tencent-vm]\n${{ secrets.VM_HOST }} ansible_user=${{ secrets.VM_USER }} ansible_port=${{ secrets.VM_SSH_PORT || 22 }} ansible_ssh_private_key_file=/tmp/id_rsa\n" > inventory
+
+      # 4) Run the playbook
+      - name: Run deploy playbook
+        run: |
+          ansible-playbook -i inventory \
+            ansible/deploy_container.yml \
+            --extra-vars "IMAGE_TAR=/tmp/docker.tar"
+
+  cleanup:
+    name: Cleanup actions
+    needs:
+      - release
+      - deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: "♻️ remove build artifacts"
+        uses: geekyeggo/delete-artifact@v1
+        with:
+          name: |
+            build
+            docker
+            diagram

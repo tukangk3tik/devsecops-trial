@@ -1,0 +1,29 @@
+- name: Deploy container
+  hosts: tencent-vm
+  become: yes
+  vars:
+    project_name: "{{ lookup('env', 'PROJECT_NAME') | default('app') }}"
+    image_name: "{{ lookup('env', 'IMAGE_NAME') | default('REPO:latest') }}"
+    tar_path:   "{{ lookup('env', 'IMAGE_TAR')  | default('/tmp/docker.tar') }}"
+  tasks:
+    - name: Copy Docker image tarball
+      copy:
+        src: "{{ tar_path }}"
+        dest: /tmp/docker.tar
+        mode: '0644'
+
+    - name: Load image
+      shell: docker load --input /tmp/docker.tar
+
+    - name: Stop old container (if running)
+      shell: docker stop {{ project_name }} || true
+
+    - name: Remove old container (if present)
+      shell: docker rm {{ project_name }} || true
+
+    - name: Run new container
+      shell: |
+        docker run -d \
+          --name {{ project_name }} \
+          -p 7443:7443 \
+          {{ image_name }}

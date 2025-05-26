@@ -1,0 +1,12 @@
+include:
+  - project: felix-research/itsel-ci-cd
+    ref: main
+    file: ".gitlab/main.yml"
+    
+variables:
+  NODEJS_VERSION: "16"
+  SONAR_PROJECT_KEY: "tere-backend-nodejs"
+  SERVICE_NAME: "tere-backend-nodejs"
+  BINARY_FILE: "tere-backend-nodejs-dist.tar.gz"
+  EXECUTABLE_FILE: "${CI_PROJECT_DIR}/tere-backend-nodejs-dist.tar.gz"
+  EXTRA_FLAG: "-e ANSIBLE_APP_PATH=/apps/tselreward/services/telkomsel-reward -e ANSIBLE_APP_BINARY=tere-nodejs-dist.tar.gz"
