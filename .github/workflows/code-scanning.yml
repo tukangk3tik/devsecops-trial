@@ -1,10 +1,7 @@
 name: SonarQube Code Scanning
 
 on:
-  workflow_call: 
-
-permissions:
-  pull-requests: read
+  workflow_call:
 
 jobs:
   code-scanning:
