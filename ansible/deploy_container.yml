@@ -33,6 +33,11 @@
         force_kill: yes
       ignore_errors: yes
 
+    - name: Remove old Docker images
+      docker_image:
+        name: "{{ image_name }}"
+        state: absent
+
     - name: Run new container
       docker_container:
         name: "{{ project_name }}"
@@ -42,7 +47,7 @@
         ports:
           - "0.0.0.0:7443:3000"
         healthcheck:
-          test: ["CMD-SHELL", "curl -f http://localhost:7443 || exit 1"]
+          test: ["CMD-SHELL", "curl -f http://localhost:3000 || exit 1"]
           interval: 30s
           timeout: 10s
           retries: 3
