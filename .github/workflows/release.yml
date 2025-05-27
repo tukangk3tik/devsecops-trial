@@ -91,11 +91,8 @@ jobs:
         with:
           node-version: ${{ vars.NODE_VERSION }}
 
-      - name: "🔧 install npm@latest"
-        run: npm i -g npm@latest
-
       - name: "📦 install dependencies"
-        uses: bahmutov/npm-install@v1
+        run: make install 
 
       - name: "📊 repository visualizer"
         id: diagram
