@@ -231,7 +231,7 @@ jobs:
             -e "IMAGE_TAR=/tmp/docker.tar" \
             -e "PROJECT_NAME=${{ vars.PROJECT_NAME }}" \
             -e "IMAGE_NAME=${{ github.repository }}:latest" \
-            -vvv
+            -vv
 
   cleanup:
     name: Cleanup actions

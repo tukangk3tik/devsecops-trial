@@ -40,7 +40,7 @@
         state: started
         restart_policy: unless-stopped
         ports:
-          - "0.0.0.0:7443:7443"  # Explicitly bind to all interfaces
+          - "0.0.0.0:7443:3000"
         healthcheck:
           test: ["CMD-SHELL", "curl -f http://localhost:7443 || exit 1"]
           interval: 30s
