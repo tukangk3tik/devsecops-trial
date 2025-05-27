@@ -2,9 +2,9 @@
   hosts: tencent-vm
   become: yes
   vars:
-    project_name: "{{ lookup('env', 'PROJECT_NAME') | default('app') }}"
-    image_name: "{{ lookup('env', 'IMAGE_NAME') | default('REPO:latest') }}"
-    tar_path:   "{{ lookup('env', 'IMAGE_TAR')  | default('/tmp/docker.tar') }}"
+    project_name: "{{ PROJECT_NAME | default('app') }}"
+    image_name: "{{ IMAGE_NAME | default('REPO:latest') }}"
+    tar_path:   "{{ IMAGE_TAR | default('/tmp/docker.tar') }}"
   tasks:
     - name: Check if Docker image tarball exists
       stat:
