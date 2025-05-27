@@ -2,7 +2,7 @@ name: Development
 
 on:
   workflow_call:
-    vars:
+    secrets:
       NODE_VERSION:
         required: true
 
@@ -18,7 +18,7 @@ jobs:
       - name: "🔧 setup node"
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ vars.NODE_VERSION }}
+          node-version: ${{ secrets.NODE_VERSION }}
 
       - name: "📦 install dependencies"
         run: make install
@@ -52,7 +52,7 @@ jobs:
       - name: "🔧 setup node"
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ vars.NODE_VERSION }}
+          node-version: ${{ secrets.NODE_VERSION }}
 
       - name: " install dependencies"
         run: make install
