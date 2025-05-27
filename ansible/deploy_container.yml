@@ -23,8 +23,21 @@
         dest: /tmp/docker.tar
         mode: '0644'
 
-    - name: Load image
+    - name: Load Docker image
       shell: docker load --input /tmp/docker.tar
+      register: docker_load_result
+
+    - name: Show loaded image info
+      debug:
+        var: docker_load_result.stdout
+
+    - name: Verify image exists
+      shell: docker images "{{ image_name }}"
+      register: image_check
+
+    - name: Show available images
+      debug:
+        var: image_check.stdout
 
     - name: Stop and remove old container
       docker_container:
@@ -33,17 +46,13 @@
         force_kill: yes
       ignore_errors: yes
 
-    - name: Remove old Docker images
-      docker_image:
-        name: "{{ image_name }}"
-        state: absent
-
     - name: Run new container
       docker_container:
         name: "{{ project_name }}"
         image: "{{ image_name }}"
         state: started
         restart_policy: unless-stopped
+        pull: false
         ports:
           - "0.0.0.0:7443:3000"
         healthcheck:
@@ -53,7 +62,6 @@
           retries: 3
           start_period: 30s
         detach: yes
-        pull: false  # Don't pull since we're loading from tar
       register: container_result
 
     - name: Check container status
@@ -72,3 +80,7 @@
     - name: Show container info
       debug:
         var: container_info.container.State
+
+    - name: Clean up old unused images (careful cleanup)
+      shell: docker image prune -f --filter "until=24h"
+      ignore_errors: yes
