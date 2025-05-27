@@ -25,6 +25,8 @@ jobs:
   test:
     name: Test and lint
     uses: ./.github/workflows/development.yml
+    vars:
+      NODE_VERSION: ${{ vars.NODE_VERSION }}
     needs:
       # - security
       - code-scanning
@@ -87,7 +89,7 @@ jobs:
       - name: "🔧 setup node"
         uses: actions/setup-node@v4
         with:
-          node-version: 16
+          node-version: ${{ vars.NODE_VERSION }}
 
       - name: "🔧 install npm@latest"
         run: npm i -g npm@latest

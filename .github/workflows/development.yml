@@ -2,6 +2,9 @@ name: Development
 
 on:
   workflow_call:
+    vars:
+      NODE_VERSION:
+        required: true
 
 jobs:
   test:
@@ -15,10 +18,7 @@ jobs:
       - name: "🔧 setup node"
         uses: actions/setup-node@v4
         with:
-          node-version: 16
-
-      - name: "🔧 install npm@latest"
-        run: npm i -g npm@latest
+          node-version: ${{ vars.NODE_VERSION }}
 
       - name: "📦 install dependencies"
         run: make install
@@ -52,12 +52,9 @@ jobs:
       - name: "🔧 setup node"
         uses: actions/setup-node@v4
         with:
-          node-version: 16
+          node-version: ${{ vars.NODE_VERSION }}
 
-      - name: "🔧 install npm@latest"
-        run: npm i -g npm@latest
-
-      - name: "📦 install dependencies"
+      - name: " install dependencies"
         run: make install
 
       - name: "🔍 lint code"
