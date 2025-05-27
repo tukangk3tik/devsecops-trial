@@ -25,6 +25,7 @@ jobs:
   test:
     name: Test and lint
     uses: ./.github/workflows/development.yml
+    secrets: {}
     vars:
       NODE_VERSION: ${{ vars.NODE_VERSION }}
     needs:
