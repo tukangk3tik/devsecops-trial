@@ -12,7 +12,7 @@ jobs:
     name: Dependency Alerts
     uses: ./.github/workflows/security.yml
     secrets:
-      GITHUB_TOKEN: ${{ secrets.PAT_GITHUB_TOKEN }}
+      PAT_GITHUB_TOKEN: ${{ secrets.PAT_GITHUB_TOKEN }}
 
   code-scanning:
     name: SonarQube Code Scanning
@@ -20,7 +20,7 @@ jobs:
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-      GITHUB_TOKEN: ${{ secrets.PAT_GITHUB_TOKEN }}
+      PAT_GITHUB_TOKEN: ${{ secrets.PAT_GITHUB_TOKEN }}
 
   test:
     name: Test and lint

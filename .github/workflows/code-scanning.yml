@@ -7,7 +7,7 @@ on:
         required: true
       SONAR_HOST_URL:
         required: true
-      GITHUB_TOKEN:
+      PAT_GITHUB_TOKEN:
         required: true
 
 jobs:
@@ -21,7 +21,7 @@ jobs:
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v5
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT_GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         with:
