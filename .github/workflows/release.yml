@@ -230,8 +230,7 @@ jobs:
           ansible-playbook -i inventory ansible/deploy_container.yml \
             -e "IMAGE_TAR=/tmp/docker.tar" \
             -e "PROJECT_NAME=${{ vars.PROJECT_NAME }}" \
-            -e "IMAGE_NAME=${{ github.repository }}:latest" \
-            -vv
+            -e "IMAGE_NAME=${{ github.repository }}:latest"
 
   cleanup:
     name: Cleanup actions
