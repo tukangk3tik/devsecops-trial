@@ -6,6 +6,17 @@
     image_name: "{{ lookup('env', 'IMAGE_NAME') | default('REPO:latest') }}"
     tar_path:   "{{ lookup('env', 'IMAGE_TAR')  | default('/tmp/docker.tar') }}"
   tasks:
+    - name: Check if Docker image tarball exists
+      stat:
+        path: "{{ tar_path }}"
+      register: tarball_stat
+      delegate_to: localhost
+
+    - name: Fail if Docker image tarball is missing
+      fail:
+        msg: "Docker image tarball not found at {{ tar_path }}"
+      when: not tarball_stat.stat.exists
+
     - name: Copy Docker image tarball
       copy:
         src: "{{ tar_path }}"

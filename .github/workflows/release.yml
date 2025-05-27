@@ -204,6 +204,9 @@ jobs:
           name: docker
           path: /tmp
 
+      - name: Verify docker.tar exists
+        run: ls -l /tmp/docker.tar
+
       # 2) Install Ansible
       - name: Install Ansible
         run: |
