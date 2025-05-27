@@ -40,5 +40,30 @@
         state: started
         restart_policy: unless-stopped
         ports:
-          - "7443:7443"
+          - "0.0.0.0:7443:7443"  # Explicitly bind to all interfaces
+        healthcheck:
+          test: ["CMD-SHELL", "curl -f http://localhost:7443 || exit 1"]
+          interval: 30s
+          timeout: 10s
+          retries: 3
+          start_period: 30s
         detach: yes
+        pull: false  # Don't pull since we're loading from tar
+      register: container_result
+
+    - name: Check container status
+      debug:
+        var: container_result
+
+    - name: Wait for container to be healthy
+      docker_container_info:
+        name: "{{ project_name }}"
+      register: container_info
+      until: container_info.container.State.Health.Status == "healthy"
+      retries: 10
+      delay: 10
+      ignore_errors: yes
+
+    - name: Show container info
+      debug:
+        var: container_info.container.State

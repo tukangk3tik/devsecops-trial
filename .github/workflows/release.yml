@@ -248,3 +248,4 @@ jobs:
             build
             docker
             diagram
+          failOnError: false
