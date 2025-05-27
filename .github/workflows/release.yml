@@ -210,21 +210,19 @@ jobs:
           python -m pip install --upgrade pip
           pip install ansible-core
 
-      # 3) Prepare SSH key & inventory
-      - name: Prepare inventory & SSH key
+      # 3) Setup SSH key
+      - name: Setup SSH key
         run: |
-          echo "${{ secrets.VM_SSH_KEY }}" > /tmp/id_rsa
-          chmod 600 /tmp/id_rsa
-          printf "[tencent-vm]\n${{ secrets.VM_HOST }} ansible_user=${{ secrets.VM_USER }} ansible_port=${{ secrets.VM_SSH_PORT || 22 }} ansible_ssh_private_key_file=/tmp/id_rsa\n" > inventory
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VM_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
 
-      # 4) Run the playbook
+      # 4) Run deploy playbook
       - name: Run deploy playbook
         run: |
-          ls -la ./
-          ls -la ansible/
-          ansible-playbook -i inventory \
-            ansible/deploy_container.yml \
-            --extra-vars "IMAGE_TAR=/tmp/docker.tar" -vv
+          export ANSIBLE_HOST_KEY_CHECKING=False
+          printf "[tencent-vm]\n${{ secrets.VM_HOST }} ansible_user=${{ secrets.VM_USER }} ansible_port=${{ secrets.VM_SSH_PORT || 22 }}" > inventory
+          ansible-playbook -i inventory ansible/deploy_container.yml --extra-vars "IMAGE_TAR=/tmp/docker.tar" -vv
 
   cleanup:
     name: Cleanup actions
