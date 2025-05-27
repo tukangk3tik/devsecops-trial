@@ -135,6 +135,8 @@ jobs:
       name: production
       url: https://github.com/${{ github.repository }}/releases/tag/${{ steps.semantic-release.outputs.release-tag }}
     name: Semantic release
+    permissions:
+      contents: write
     needs:
       - test
       - docker
