@@ -221,8 +221,12 @@ jobs:
       - name: Run deploy playbook
         run: |
           export ANSIBLE_HOST_KEY_CHECKING=False
-          printf "[tencent-vm]\n${{ secrets.VM_HOST }} ansible_user=${{ secrets.VM_USER }} ansible_port=${{ secrets.VM_SSH_PORT || 22 }}" > inventory
-          ansible-playbook -i inventory ansible/deploy_container.yml --extra-vars "IMAGE_TAR=/tmp/docker.tar" -vv
+          printf "[tencent-vm]\n${{ secrets.VM_HOST }} ansible_user=${{ secrets.VM_USER }} ansible_port=${{ secrets.VM_SSH_PORT || 22 }} ansible_ssh_private_key_file=~/.ssh/id_rsa" > inventory
+          ansible-playbook -i inventory ansible/deploy_container.yml \
+            --extra-vars "IMAGE_TAR=/tmp/docker.tar" \
+            --extra-vars "PROJECT_NAME=${{ vars.PROJECT_NAME }}" \
+            --extra-vars "IMAGE_NAME=${{ github.repository }}:latest" \
+            -vv
 
   cleanup:
     name: Cleanup actions

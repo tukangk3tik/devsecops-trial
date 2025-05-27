@@ -15,15 +15,19 @@
     - name: Load image
       shell: docker load --input /tmp/docker.tar
 
-    - name: Stop old container (if running)
-      shell: docker stop {{ project_name }} || true
-
-    - name: Remove old container (if present)
-      shell: docker rm {{ project_name }} || true
+    - name: Stop and remove old container
+      docker_container:
+        name: "{{ project_name }}"
+        state: absent
+        force_kill: yes
+      ignore_errors: yes
 
     - name: Run new container
-      shell: |
-        docker run -d \
-          --name {{ project_name }} \
-          -p 7443:7443 \
-          {{ image_name }}
+      docker_container:
+        name: "{{ project_name }}"
+        image: "{{ image_name }}"
+        state: started
+        restart_policy: unless-stopped
+        ports:
+          - "7443:7443"
+        detach: yes
