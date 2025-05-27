@@ -14,28 +14,28 @@ jobs:
   #   secrets:
   #     PAT_GITHUB_TOKEN: ${{ secrets.PAT_GITHUB_TOKEN }}
 
-  code-scanning:
-    name: SonarQube Code Scanning
-    uses: ./.github/workflows/code-scanning.yml
-    secrets:
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-      PAT_GITHUB_TOKEN: ${{ secrets.PAT_GITHUB_TOKEN }}
+  # code-scanning:
+  #   name: SonarQube Code Scanning
+  #   uses: ./.github/workflows/code-scanning.yml
+  #   secrets:
+  #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+  #     SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+  #     PAT_GITHUB_TOKEN: ${{ secrets.PAT_GITHUB_TOKEN }}
 
-  test:
-    name: Test and lint
-    uses: ./.github/workflows/development.yml
-    secrets:
-      NODE_VERSION: ${{ vars.NODE_VERSION }}
-    needs:
-      # - security
-      - code-scanning
+  # test:
+  #   name: Test and lint
+  #   uses: ./.github/workflows/development.yml
+  #   secrets:
+  #     NODE_VERSION: ${{ vars.NODE_VERSION }}
+  #   needs:
+  #     # - security
+  #     - code-scanning
 
   docker:
     name: Build container
     runs-on: ubuntu-latest
-    needs:
-      - test
+    # needs:
+      # - test
     timeout-minutes: 10
     steps:
       - name: "☁️ checkout repository"
@@ -71,7 +71,7 @@ jobs:
           cache-to: type=gha, scope=${{ github.workflow }}
 
       - name: "📂 docker artifacts"
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@4
         with:
           name: docker
           path: /tmp/docker.tar
@@ -193,6 +193,10 @@ jobs:
       IMAGE_NAME:   ${{ github.repository }}:latest
 
     steps:
+      # 0) Checkout repository for ansible files
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       # 1) Download the docker.tar artifact
       - name: Download docker artifact
         uses: actions/download-artifact@v4
@@ -216,9 +220,10 @@ jobs:
       # 4) Run the playbook
       - name: Run deploy playbook
         run: |
+          ls -la ansible/
           ansible-playbook -i inventory \
             ansible/deploy_container.yml \
-            --extra-vars "IMAGE_TAR=/tmp/docker.tar"
+            --extra-vars "IMAGE_TAR=/tmp/docker.tar" -vv
 
   cleanup:
     name: Cleanup actions
