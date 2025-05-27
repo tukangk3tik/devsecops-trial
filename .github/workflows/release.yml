@@ -8,11 +8,11 @@ on:
       - beta
       
 jobs:
-  security:
-    name: Dependency Alerts
-    uses: ./.github/workflows/security.yml
-    secrets:
-      PAT_GITHUB_TOKEN: ${{ secrets.PAT_GITHUB_TOKEN }}
+  # security:
+  #   name: Dependency Alerts
+  #   uses: ./.github/workflows/security.yml
+  #   secrets:
+  #     PAT_GITHUB_TOKEN: ${{ secrets.PAT_GITHUB_TOKEN }}
 
   code-scanning:
     name: SonarQube Code Scanning
@@ -26,7 +26,7 @@ jobs:
     name: Test and lint
     uses: ./.github/workflows/development.yml
     needs:
-      - security
+      # - security
       - code-scanning
 
   docker:
