@@ -23,7 +23,6 @@ jobs:
     secrets:
       NODE_VERSION: ${{ vars.NODE_VERSION }}
     needs:
-      # - security
       - code-scanning
 
   docker:
