@@ -8,11 +8,6 @@ on:
       - beta
       
 jobs:
-  # security:
-  #   name: Dependency Alerts
-  #   uses: ./.github/workflows/security.yml
-  #   secrets:
-  #     PAT_GITHUB_TOKEN: ${{ secrets.PAT_GITHUB_TOKEN }}
 
   code-scanning:
     name: SonarQube Code Scanning
@@ -130,58 +125,83 @@ jobs:
           name: build
           path: build
 
+  # release:
+  #   environment:
+  #     name: production
+  #     url: https://github.com/${{ github.repository }}/releases/tag/${{ steps.semantic-release.outputs.release-tag }}
+  #   name: Semantic release
+  #   permissions:
+  #     contents: write
+  #   needs:
+  #     - test
+  #     - docker
+  #     - build
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 10
+  #   steps:
+  #     - name: "☁️ checkout repository"
+  #       uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0
+
+  #     - name: "♻️ clean up artifact paths"
+  #       run: |
+  #         rm -rf public/diagram.svg
+  #         rm -rf supabase/diagrams/
+
+  #     - name: "📂 download docker artifacts"
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: docker
+  #         path: /tmp
+
+  #     - name: "📦 load tag"
+  #       run: |
+  #         docker load --input /tmp/docker.tar
+  #         docker image ls -a
+
+  #     - name: "📂 download build artifacts"
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: build
+  #         path: build
+
+  #     - name: "📂 download diagram artifacts"
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: diagram
+  #         path: public/
+
+  #     - name: "🚀 release"
+  #       id: semantic-release
+  #       uses: open-sauced/release@v1
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.PAT_GITHUB_TOKEN }}
+
   release:
-    environment:
-      name: production
-      url: https://github.com/${{ github.repository }}/releases/tag/${{ steps.semantic-release.outputs.release-tag }}
-    name: Semantic release
-    permissions:
-      contents: write
-    needs:
-      - test
-      - docker
-      - build
+    name: Release
+    needs: test
     runs-on: ubuntu-latest
-    timeout-minutes: 10
     steps:
-      - name: "☁️ checkout repository"
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.PAT_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
 
-      - name: "♻️ clean up artifact paths"
-        run: |
-          rm -rf public/diagram.svg
-          rm -rf supabase/diagrams/
-
-      - name: "📂 download docker artifacts"
-        uses: actions/download-artifact@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          name: docker
-          path: /tmp
+          node-version: ${{ vars.NODE_VERSION || '20.x' }}
+          cache: 'npm'
 
-      - name: "📦 load tag"
-        run: |
-          docker load --input /tmp/docker.tar
-          docker image ls -a
+      - name: Install dependencies
+        run: npm ci
 
-      - name: "📂 download build artifacts"
-        uses: actions/download-artifact@v4
-        with:
-          name: build
-          path: build
-
-      - name: "📂 download diagram artifacts"
-        uses: actions/download-artifact@v4
-        with:
-          name: diagram
-          path: public/
-
-      - name: "🚀 release"
-        id: semantic-release
-        uses: open-sauced/release@v1
+      - name: Release
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT_GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
 
   deploy:
     name: Deploy container to VM
