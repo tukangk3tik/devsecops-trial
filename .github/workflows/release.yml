@@ -182,7 +182,10 @@ jobs:
     environment:
       name: production
       url: https://github.com/${{ github.repository }}/releases/
-    needs: test
+    needs: 
+      - test
+      - docker
+      - build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
