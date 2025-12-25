@@ -15,8 +15,8 @@ describe('AppController', () => {
   });
 
   describe('root', () => {
-    it('should return "DevSecOps Trial Project"', () => {
-      expect(appController.getHello()).toBe('<h3>DevSecOps Trial Project</h3>');
+    it('should return "DevSecOps Trial Project Updated!"', () => {
+      expect(appController.getHello()).toBe('<h3>DevSecOps Trial Project Updated!</h3>');
     });
   });
 });
